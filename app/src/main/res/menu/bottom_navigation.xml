@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/nav_radio_stations"
+        android:icon="@drawable/ic_radio_stations_black_24dp"
+        android:title="@string/title_radio_station" />
+
+    <item
+        android:id="@+id/nav_radio_fav"
+        android:icon="@drawable/ic_radio_fav_black_24dp"
+        android:title="@string/title_radio_favorites" />
+
+    <item
+        android:id="@+id/nav_radio_podcast"
+        android:icon="@drawable/ic_radio_podcast_black_24dp"
+        android:title="@string/title_radio_podcasts" />
+
+    <item
+        android:id="@+id/nav_radio_settings"
+        android:icon="@drawable/ic_radio_settings_black_24dp"
+        android:title="@string/title_radio_settings" />
+
+</menu>

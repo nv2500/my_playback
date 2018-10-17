@@ -20,7 +20,7 @@ import androidx.fragment.app.Fragment;
 
 public abstract class BaseFragment extends Fragment {
 
-    private View rootView;
+    protected View rootView;
 
     protected abstract String screenName();
 
@@ -64,7 +64,8 @@ public abstract class BaseFragment extends Fragment {
         TextView tv = rootView.findViewById(R.id.textView);
         tv.setText(screenName());
 
-        rootView.setBackgroundColor(rdn_bg_color);
+        // rootView.setBackgroundColor(rdn_bg_color);
+        rootView.setBackgroundColor(Color.WHITE);
 
         //return super.onCreateView(inflater, container, savedInstanceState);
         return rootView;

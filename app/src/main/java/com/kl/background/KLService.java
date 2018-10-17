@@ -20,6 +20,9 @@ import android.widget.Toast;
 
 import com.example.myapplication.MainActivity;
 import com.example.myapplication.R;
+import com.kl.KLApplication;
+import com.kl.KLPlaybackManager;
+import com.kl.playback.Playback;
 import com.kl.utils.Logger;
 
 import androidx.core.app.NotificationCompat;
@@ -75,6 +78,8 @@ public class KLService extends Service {
     private static final int NOTIFICATION_ID = 12345678;
 
     private static final int MSG_HEARTBEAT = 119;
+
+    private KLPlaybackManager mPlaybackManager;
 
     private NotificationManager mNotificationManager;
 
@@ -142,7 +147,9 @@ public class KLService extends Service {
         mServiceLooper = thread.getLooper();
         mServiceHandler = new ServiceHandler(mServiceLooper);
 
-        doHeartBeat();
+        mPlaybackManager = new KLPlaybackManager(KLApplication.getInstance().getContext());
+
+        // doHeartBeat();
     }
 
     @Override
@@ -205,7 +212,7 @@ public class KLService extends Service {
         // The service is starting, due to a call to startService()
         Logger.getLogger().e("[INF] onStartCommand <<<");
 
-        Toast.makeText(this, "Service starting...", Toast.LENGTH_SHORT).show();
+        //Toast.makeText(this, "Service starting...", Toast.LENGTH_SHORT).show();
 
         boolean startedFromNotification = intent.getBooleanExtra("EXTRA_STARTED_FROM_NOTIFICATION",
                 false);
@@ -232,7 +239,7 @@ public class KLService extends Service {
     private void doHeartBeat() {
         Message msg = mServiceHandler.obtainMessage();
         msg.arg1 = MSG_HEARTBEAT;
-        mServiceHandler.sendMessageDelayed(msg, 3000);
+        mServiceHandler.sendMessageDelayed(msg, 5000);
     }
 
     @Override
@@ -280,7 +287,7 @@ public class KLService extends Service {
                 .setOngoing(true)
                 .setAutoCancel(false)
                 .setContentTitle("Title goes here!")
-                .setContentText("Content goes hedore!")
+                .setContentText("Content goes here!")
                 .setSmallIcon(R.drawable.ic_home_black_24dp)
                 .setPriority(Notification.PRIORITY_HIGH)
                 //.setContentIntent(pendingIntent)
@@ -296,14 +303,21 @@ public class KLService extends Service {
 
     @Override
     public void onDestroy() {
+        // release player resources
+        if (mPlaybackManager != null) {
+            mPlaybackManager.releaseResources(true);
+        }
+
         Logger.getLogger().e("[INF] onDestroy <<<");
         // The service is no longer used and is being destroyed
 
-        Toast.makeText(this, "Service done!", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Closing application...", Toast.LENGTH_SHORT).show();
 
         mServiceHandler.removeCallbacksAndMessages(null);
 
         stopForeground(true);
+
+        stopSelf();
     }
 
     /**
@@ -336,5 +350,35 @@ public class KLService extends Service {
             }
         }
         return false;
+    }
+
+    public void handlePlayRequest() {
+        if (mPlaybackManager == null) {
+            // should not enter this case
+            return;
+        }
+
+        Playback playback = mPlaybackManager.getPlayback();
+        if (!playback.isPlaying()) {
+            // only play new one
+            String radioUrl = "http://199.115.115.71:8319/;"; // CVCR - Valley Christian Radio
+            mPlaybackManager.playAudio(radioUrl);
+        } else {
+            Logger.getLogger().e("[INF] continue play current media!");
+        }
+    }
+
+    /**
+     * If the player is already in the ready state
+     * then this method can be used to pause and resume playback.
+     * @param playWhenReady
+     */
+    public void setPlayWhenReady(boolean playWhenReady) {
+        if (mPlaybackManager == null) {
+            // should not enter this case
+            return;
+        }
+
+
     }
 }
