@@ -10,4 +10,6 @@
     <attr name="baseColorDarkerGray" format="color|reference" />
 
     <attr name="baseColorNavigationDivider" format="color|reference" />
+
+    <attr name="baseColorAppbarText" format="color|reference" />
 </resources>
