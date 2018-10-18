@@ -6,11 +6,19 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?attr/baseColorPrimary"
-    android:clickable="true"
     android:fitsSystemWindows="true"
     android:focusableInTouchMode="true"
     tools:context=".MainActivity">
     <!--tools:openDrawer="start"-->
+
+    <!--
+        the skeleton of the CoordinatorLayout has only three children as following:
+            <CoordinatorLayout>
+                <AppbarLayout/>
+                <scrollableView/>
+                <FloatingActionButton/>
+            </CoordinatorLayout>
+    -->
 
     <!-- Layout to contain contents of main body of screen (drawer will slide over this) -->
     <androidx.coordinatorlayout.widget.CoordinatorLayout
@@ -21,41 +29,45 @@
         <com.google.android.material.appbar.AppBarLayout
             android:id="@+id/appbar"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="?attr/actionBarSize">
 
             <FrameLayout
+                android:id="@+id/myToolbar"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="match_parent"
+                android:background="?baseColorPrimary">
 
-                <FrameLayout
-                    android:id="@+id/holder"
+                <TextView
+                    android:id="@+id/title"
+                    style="@android:style/TextAppearance.Holo.Widget.ActionBar.Title"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent" />
-
-                <FrameLayout
-                    android:id="@+id/myToolbar"
-                    android:layout_width="match_parent"
-                    android:layout_height="56dp"
-                    android:background="?baseColorPrimary">
-
-                    <TextView
-                        android:id="@+id/title"
-                        style="@android:style/TextAppearance.Holo.Widget.ActionBar.Title"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:ellipsize="end"
-                        android:fontFamily="@font/montserrat_medium"
-                        android:gravity="center"
-                        android:maxLines="1"
-                        android:text="@string/app_name" />
-                </FrameLayout>
-
+                    android:layout_height="match_parent"
+                    android:ellipsize="end"
+                    android:fontFamily="@font/montserrat_medium"
+                    android:gravity="center"
+                    android:maxLines="1"
+                    android:text="@string/app_name" />
             </FrameLayout>
+
         </com.google.android.material.appbar.AppBarLayout>
 
 
         <!--androidx.swiperefreshlayout.widget.SwipeRefreshLayout-->
         <!--my action bar-->
+
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/nestedScrollView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginBottom="?attr/actionBarSize"
+            android:fillViewport="true"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+            <FrameLayout
+                android:id="@+id/holder"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+        </androidx.core.widget.NestedScrollView>
 
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -65,8 +77,8 @@
             android:layout_margin="16dp"
             android:clickable="true"
             android:src="@drawable/exo_controls_fullscreen_exit"
-            app:layout_anchor="@id/holder"
-            android:visibility="gone"
+            android:visibility="visible"
+            app:layout_anchor="@id/nestedScrollView"
             app:layout_anchorGravity="bottom|right|end" />
 
 
@@ -74,21 +86,18 @@
             android:id="@+id/navigation"
             style="@style/mBottomNavigationView"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="?attr/actionBarSize"
             android:layout_gravity="bottom"
             android:background="?baseColorPrimary"
 
-            app:itemBackground="?baseColorPrimary"
             app:itemIconTint="@color/bnv_tab_item_foreground"
             app:itemTextColor="@color/bnv_tab_item_foreground"
 
             app:labelVisibilityMode="selected"
             app:layout_insetEdge="bottom"
-            app:menu="@menu/bottom_navigation" />
-        <!--app:itemBackground="@color/colorBlack"-->
-        <!--app:itemIconTint="@color/colorWhite"-->
-        <!--app:itemTextColor="@color/colorWhite"-->
 
+            app:menu="@menu/bottom_navigation" />
+        <!--app:layout_behavior="com.kl.ui.widget.BottomNavigationBehavior"-->
         <!--app:layout_insetEdge="bottom" avoid overlap layout between BottomNavigationView and FloatingActionButton -->
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
