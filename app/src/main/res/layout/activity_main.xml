@@ -23,60 +23,29 @@
     <!-- Layout to contain contents of main body of screen (drawer will slide over this) -->
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:id="@+id/coordinatorLayout"
-        android:background="@android:color/transparent"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:background="@android:color/transparent">
 
         <com.google.android.material.appbar.AppBarLayout
             android:id="@+id/appbar"
             android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize">
+            android:layout_height="?attr/actionBarSize"
+            android:background="@android:color/transparent">
 
             <com.kl.ui.widget.CenteredToolbar
                 android:id="@+id/toolbar"
-                android:layout_height="wrap_content"
                 android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/mybg_appr_drawer"
                 android:minHeight="?attr/actionBarSize"
-                app:title="@string/app_name"
-                app:navigationIcon="@drawable/ic_hamburger_black_24dp">
-
-                <!--<TextView-->
-                    <!--android:id="@+id/title"-->
-                    <!--style="@style/TextAppearance.AppCompat.Widget.ActionBar.Title"-->
-                    <!--android:layout_width="wrap_content"-->
-                    <!--android:layout_height="match_parent"-->
-                    <!--android:ellipsize="end"-->
-                    <!--android:fontFamily="@font/montserrat_medium"-->
-                    <!--android:gravity="center"-->
-                    <!--android:maxLines="1"-->
-                    <!--android:text="@string/app_name" />-->
-
-
-            </com.kl.ui.widget.CenteredToolbar>
-            <!--<FrameLayout-->
-                <!--android:id="@+id/myToolbar"-->
-                <!--android:layout_width="match_parent"-->
-                <!--android:layout_height="match_parent"-->
-                <!--android:background="@drawable/mybg_appr_drawer_">-->
-
-                <!--<TextView-->
-                    <!--android:id="@+id/title"-->
-                    <!--style="@android:style/TextAppearance.Holo.Widget.ActionBar.Title"-->
-                    <!--android:layout_width="match_parent"-->
-                    <!--android:layout_height="match_parent"-->
-                    <!--android:ellipsize="end"-->
-                    <!--android:fontFamily="@font/montserrat_medium"-->
-                    <!--android:gravity="center"-->
-                    <!--android:maxLines="1"-->
-                    <!--android:text="@string/app_name" />-->
-            <!--</FrameLayout>-->
+                app:navigationIcon="@drawable/ic_hamburger_black_24dp"
+                app:title="@string/app_name" />
 
         </com.google.android.material.appbar.AppBarLayout>
 
 
         <!--androidx.swiperefreshlayout.widget.SwipeRefreshLayout-->
-        <!--my action bar-->
-
         <androidx.core.widget.NestedScrollView
             android:id="@+id/nestedScrollView"
             android:layout_width="match_parent"
