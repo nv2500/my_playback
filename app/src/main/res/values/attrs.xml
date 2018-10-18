@@ -9,4 +9,5 @@
 
     <attr name="baseColorDarkerGray" format="color|reference" />
 
+    <attr name="baseColorNavigationDivider" format="color|reference" />
 </resources>

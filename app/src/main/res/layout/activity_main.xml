@@ -35,7 +35,7 @@
                 android:id="@+id/myToolbar"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="?baseColorPrimary">
+                android:background="@drawable/mybg_appr_drawer">
 
                 <TextView
                     android:id="@+id/title"
@@ -88,7 +88,7 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:layout_gravity="bottom"
-            android:background="?baseColorPrimary"
+            android:background="@drawable/mybg_bottom_nav_drawer"
 
             app:itemIconTint="@color/bnv_tab_item_foreground"
             app:itemTextColor="@color/bnv_tab_item_foreground"

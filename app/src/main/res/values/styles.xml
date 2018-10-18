@@ -26,6 +26,7 @@
         <item name="baseColorPrimary">#FFFF</item>
         <item name="baseColorPrimaryDark">#FFFF</item>
         <item name="baseColorDarkerGray">#aaa</item>
+        <item name="baseColorNavigationDivider">#0000</item>
     </style>
 
     <style name="DarkTheme" parent="myBaseTheme.">
@@ -34,6 +35,7 @@
         <item name="baseColorPrimary">#000</item>
         <item name="baseColorPrimaryDark">#000</item>
         <item name="baseColorDarkerGray">#aaa</item>
+        <item name="baseColorNavigationDivider">#5aaa</item>
     </style>
 
     <style name="mBottomNavigationView" parent="Widget.Design.BottomNavigationView">
