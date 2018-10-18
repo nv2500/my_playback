@@ -5,7 +5,7 @@
     <style name="myBaseTheme." parent="Theme.AppCompat.Light.NoActionBar">
         <!--make status bar and nav bar transparent-->
         <item name="android:windowTranslucentStatus">true</item>
-        <item name="android:windowTranslucentNavigation">true</item>
+        <item name="android:windowTranslucentNavigation">false</item>
 
         <!--translucent status bar-->
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
