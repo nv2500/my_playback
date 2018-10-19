@@ -28,7 +28,7 @@
         <item name="baseColorDarkerGray">#8C8C8C</item>
         <item name="baseColorNavigationDivider">#0000</item>
 
-        <item name="baseColorAppbarText">#8C8C8C</item>
+        <item name="baseColorAppbarText">#7A7A7A</item>
     </style>
 
     <style name="DarkTheme" parent="myBaseTheme.">

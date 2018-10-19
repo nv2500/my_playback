@@ -58,7 +58,7 @@ public class CenteredToolbar extends Toolbar {
 
             centeredTitleTextView.setTextAppearance(getContext(), R.style.mAppbarTitle);
 
-            Typeface fontTypeface = ResourcesCompat.getFont(context, R.font.montserrat_medium);
+            Typeface fontTypeface = ResourcesCompat.getFont(context, R.font.gg_product_sans_regular);
             centeredTitleTextView.setTypeface(fontTypeface);
 
             centeredTitleTextView.setSingleLine();

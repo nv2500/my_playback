@@ -12,6 +12,8 @@ import android.os.IBinder;
 import android.os.PersistableBundle;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Toast;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -31,9 +33,11 @@ import net.sqlcipher.Cursor;
 import net.sqlcipher.database.SQLiteDatabase;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.FragmentManager;
@@ -227,12 +231,19 @@ public class MainActivity extends AppCompatActivity {
         mFloatingActionButton = findViewById(R.id.floatingActionButton);
 
         mToolbar = findViewById(R.id.toolbar);
-        mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
+        /*mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 mDrawerLayout.openDrawer(GravityCompat.START);
             }
-        });
+        });*/
+        setSupportActionBar(mToolbar);
+        ActionBar actionbar = getSupportActionBar();
+        if (actionbar != null) {// should not null here!
+            actionbar.setElevation(0f);
+            actionbar.setDisplayHomeAsUpEnabled(true);
+            actionbar.setHomeAsUpIndicator(R.drawable.ic_hamburger_black_24dp);
+        }
 
         // setup bottom bottom_navigation bar
         BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);

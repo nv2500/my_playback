@@ -12,9 +12,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="“LIFE IS A JOURNEY\nFill your tank with Joy”"
-        android:fontFamily="@font/montserrat_regular"
+        android:fontFamily="@font/gg_product_sans_regular"
         android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-        android:textColor="?attr/baseColorPrimary" />
+        android:textColor="#FFFF" />
     <!--“Style Your Life with Fun and Joy”-->
 
 </LinearLayout>
