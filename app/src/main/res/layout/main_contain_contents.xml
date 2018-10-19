@@ -17,6 +17,7 @@
 
         <com.google.android.material.appbar.AppBarLayout
             android:id="@+id/appbar"
+            android:stateListAnimator="@animator/appbar_elevation"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="@android:color/transparent">
@@ -27,7 +28,6 @@
                 android:layout_height="wrap_content"
                 android:background="@drawable/mybg_appr_drawer"
                 android:minHeight="?attr/actionBarSize"
-                app:navigationIcon="@drawable/ic_hamburger_black_24dp"
                 app:title="@string/app_name" />
 
         </com.google.android.material.appbar.AppBarLayout>
@@ -71,7 +71,7 @@
 
             app:itemIconTint="@color/bnv_tab_item_foreground"
             app:itemTextColor="@color/bnv_tab_item_foreground"
-
+            android:stateListAnimator="@animator/bottom_nav_elevation"
             app:labelVisibilityMode="selected"
             app:layout_insetEdge="bottom"
 

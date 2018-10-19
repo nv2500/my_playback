@@ -12,6 +12,7 @@ import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
 import com.kl.playback.LocalPlayback;
 import com.kl.playback.Playback;
+import com.kl.utils.Logger;
 
 public class KLPlaybackManager implements PlaybackPreparer,
         PlayerControlView.VisibilityListener, Playback.Callback {
@@ -48,6 +49,7 @@ public class KLPlaybackManager implements PlaybackPreparer,
     }
     public KLPlaybackManager(Context context) {
         mPlayback = new LocalPlayback(context);
+        mPlayback.setCallback(this);
     }
 
     // for PlaybackPreparer - S
@@ -90,7 +92,7 @@ public class KLPlaybackManager implements PlaybackPreparer,
      */
     @Override
     public void onError(String error) {
-
+        Logger.getLogger().e(error);
     }
 
     /**

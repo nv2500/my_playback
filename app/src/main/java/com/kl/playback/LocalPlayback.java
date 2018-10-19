@@ -176,7 +176,7 @@ public class LocalPlayback implements Playback {
 
             Logger.getLogger().e("[INF] ExoPlayer error: what=" + what);
             if (mCallback != null) {
-                mCallback.onError("ExoPlayer error " + what);
+                mCallback.onError("Player error: " + what);
             }
         }
 

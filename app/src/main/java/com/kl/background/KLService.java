@@ -362,6 +362,7 @@ public class KLService extends Service {
         if (!playback.isPlaying()) {
             // only play new one
             String radioUrl = "http://199.115.115.71:8319/;"; // CVCR - Valley Christian Radio
+             radioUrl = "http://s3.voscasst.com:7820/;stream1370537750222/1;nop.mp3"; // VOAR Christian Family Radio
             mPlaybackManager.playAudio(radioUrl);
         } else {
             Logger.getLogger().e("[INF] continue play current media!");

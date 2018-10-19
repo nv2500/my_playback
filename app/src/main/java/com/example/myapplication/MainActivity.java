@@ -12,8 +12,6 @@ import android.os.IBinder;
 import android.os.PersistableBundle;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
 import android.widget.Toast;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -37,7 +35,6 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
-import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.FragmentManager;
@@ -208,7 +205,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        setTheme(R.style.LightTheme);
+        //setTheme(R.style.LightTheme);
 
         /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             Window window = getWindow(); // in Activity's onCreate() for instance
@@ -240,7 +237,7 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(mToolbar);
         ActionBar actionbar = getSupportActionBar();
         if (actionbar != null) {// should not null here!
-            actionbar.setElevation(0f);
+            //actionbar.setElevation(0f);
             actionbar.setDisplayHomeAsUpEnabled(true);
             actionbar.setHomeAsUpIndicator(R.drawable.ic_hamburger_black_24dp);
         }
