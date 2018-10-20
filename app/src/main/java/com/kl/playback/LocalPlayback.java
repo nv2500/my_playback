@@ -33,7 +33,6 @@ import com.google.android.exoplayer2.util.Util;
 import com.kl.KLApplication;
 import com.kl.utils.Logger;
 
-import java.net.CookieHandler;
 import java.util.Formatter;
 import java.util.Locale;
 

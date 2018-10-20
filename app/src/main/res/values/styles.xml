@@ -18,6 +18,8 @@
         <item name="colorPrimaryDark">?baseColorPrimaryDark</item>
         <item name="colorAccent">?baseColorAccent</item>
         <item name="android:textColorPrimary">?baseTextColorPrimary</item>
+        <!--<item name="android:textColorSecondary">#B3FFFFFF</item>-->
+        <!--<item name="android:textColorPrimaryDisableOnly">#B3FFFFFF</item>-->
     </style>
 
     <style name="LightTheme" parent="myBaseTheme.">
@@ -34,10 +36,10 @@
     <style name="DarkTheme" parent="myBaseTheme.">
         <item name="baseColorAccent">#D81B60</item>
         <item name="baseTextColorPrimary">#FFFF</item>
-        <item name="baseColorPrimary">#000</item>
-        <item name="baseColorPrimaryDark">#000</item>
+        <item name="baseColorPrimary">#212121</item>
+        <item name="baseColorPrimaryDark">#212121</item>
         <item name="baseColorDarkerGray">#8C8C8C</item>
-        <item name="baseColorNavigationDivider">#5aaa</item>
+        <item name="baseColorNavigationDivider">#1aaaaaaa</item>
 
         <item name="baseColorAppbarText">#FFFF</item>
     </style>
