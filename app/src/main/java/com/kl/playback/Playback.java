@@ -15,7 +15,6 @@
  */
 package com.kl.playback;
 
-import android.media.session.MediaSession;
 import android.support.v4.media.session.MediaSessionCompat;
 
 /**
@@ -69,8 +68,7 @@ public interface Playback {
      */
     void updateLastKnownStreamPosition();
 
-    //void play(MediaSessionCompat.QueueItem item);
-    void play(Object item);
+    void play(MediaSessionCompat.QueueItem item);
 
     void pause();
 

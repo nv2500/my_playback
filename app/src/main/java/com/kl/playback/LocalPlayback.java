@@ -4,6 +4,7 @@ import android.content.Context;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
+import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.text.TextUtils;
@@ -30,7 +31,6 @@ import com.google.android.exoplayer2.trackselection.TrackSelector;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
-import com.kl.KLApplication;
 import com.kl.utils.Logger;
 
 import java.util.Formatter;
@@ -49,6 +49,7 @@ public class LocalPlayback implements Playback {
     // ExoPlayer player
     private SimpleExoPlayer mExoPlayer;
 
+    private Context mContext;
     private AudioManager mAudioManager;
 
     private String mCurrentMediaId;
@@ -61,19 +62,7 @@ public class LocalPlayback implements Playback {
     }
 
     public LocalPlayback(final Context context) {
-        initialize(context);
-    }
-
-    private synchronized void initialize(final Context context) {
-        //Context context = KLApplication.getInstance().getContext();
-
-        // initialize for ExoPlayer
-        TrackSelector trackSelector = new DefaultTrackSelector();
-        LoadControl loadControl = new DefaultLoadControl();
-        RenderersFactory renderersFactory = new DefaultRenderersFactory(context);
-
-        mExoPlayer = ExoPlayerFactory.newSimpleInstance(renderersFactory, trackSelector, loadControl);
-        mExoPlayer.addListener(mEventListener);
+        mContext = context;
 
         // for AudioManager
         this.mAudioManager =
@@ -287,45 +276,42 @@ public class LocalPlayback implements Playback {
     }
 
     @Override
-    //public void play(MediaSessionCompat.QueueItem item) {
-    public void play(Object item) {
+    public void play(MediaSessionCompat.QueueItem item) {
         mPlayOnFocusGain = true;
 
-        boolean mediaHasChanged = false;
+        //tryToGetAudioFocus();
+        //registerAudioNoisyReceiver();
 
-        if (item instanceof MediaSessionCompat.QueueItem) {
-            String mediaId = ((MediaSessionCompat.QueueItem) item).getDescription().getMediaId();
-            mediaHasChanged = !TextUtils.equals(mediaId, mCurrentMediaId);
-            if (mediaHasChanged) {
-                mCurrentMediaId = mediaId;
-            }
-        }
-
-        if (item instanceof String) {
-            mediaHasChanged = true;
-        }
+//        String mediaId = item.getDescription().getMediaId();
+//        boolean mediaHasChanged = !TextUtils.equals(mediaId, mCurrentMediaId);
+//        if (mediaHasChanged) {
+//            mCurrentMediaId = mediaId;
+//        }
+        boolean mediaHasChanged = true;
 
         if (mediaHasChanged || mExoPlayer == null) {
             releaseResources(false); // release everything except the player
-
-            final Context context = KLApplication.getInstance().getContext();
-
             //MediaMetadataCompat track =
             //        mMusicProvider.getMusic(
             //                MediaIDHelper.extractMusicIDFromMediaID(
             //                        item.getDescription().getMediaId()));
 
             //String source = track.getString(MusicProviderSource.CUSTOM_METADATA_TRACK_SOURCE);
-            String source = (String) item;// TODO need to separate local media or streaming or podcast contents later
+            String source = "http://199.115.115.71:8319/;";//FIXME need to sync this code
             if (source != null) {
                 source = source.replaceAll(" ", "%20"); // Escape spaces for URLs
             }
 
             if (mExoPlayer == null) {
-                mExoPlayer = ExoPlayerFactory.newSimpleInstance(
-                        new DefaultRenderersFactory(context),
-                        new DefaultTrackSelector(),
-                        new DefaultLoadControl());
+                // initialize for ExoPlayer
+                // RenderersFactory - creates renderers for timestamp synchronized rendering of video, audio and text (subtitles).
+                // The TrackSelector - responsible for selecting from the available audio, video and text tracks.
+                // LoadControl - manages buffering of the player.
+                TrackSelector trackSelector = new DefaultTrackSelector();
+                LoadControl loadControl = new DefaultLoadControl();
+                RenderersFactory renderersFactory = new DefaultRenderersFactory(mContext);
+
+                mExoPlayer = ExoPlayerFactory.newSimpleInstance(renderersFactory, trackSelector, loadControl);
                 mExoPlayer.addListener(mEventListener);
             }
 
@@ -343,7 +329,7 @@ public class LocalPlayback implements Playback {
             // Produces DataSource instances through which media data is loaded.
             DataSource.Factory dataSourceFactory =
                     new DefaultDataSourceFactory(
-                            context, Util.getUserAgent(context, "uamp"), null);
+                            mContext, Util.getUserAgent(mContext, "uamp"), null);
             // Produces Extractor instances for parsing the media data.
             ExtractorsFactory extractorsFactory = new DefaultExtractorsFactory();
             // The MediaSource represents the media to be played.
@@ -479,6 +465,7 @@ public class LocalPlayback implements Playback {
         // If we were playing when we lost focus, we need to resume playing.
         if (mPlayOnFocusGain) {
             mExoPlayer.setPlayWhenReady(true);
+
             mPlayOnFocusGain = false;
         }
     }

@@ -5,11 +5,16 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.PersistableBundle;
+import android.preference.PreferenceManager;
+import android.provider.MediaStore;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
@@ -19,6 +24,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
 import com.kl.background.KLService;
+import com.kl.background.PlaybackResultReceiver;
 import com.kl.data.DatabaseDefinition;
 import com.kl.data.DbHelper;
 import com.kl.ui.fragments.RadioFavoritesFragment;
@@ -26,9 +32,14 @@ import com.kl.ui.fragments.RadioPodcastsFragment;
 import com.kl.ui.fragments.RadioSettingsFragment;
 import com.kl.ui.fragments.RadioStationFragment;
 import com.kl.utils.Logger;
+import com.kl.utils.ParsingHeaderData;
 
 import net.sqlcipher.Cursor;
 import net.sqlcipher.database.SQLiteDatabase;
+
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
@@ -39,7 +50,9 @@ import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.FragmentManager;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements PlaybackResultReceiver.AppReceiver {
+
+    private final String PREF_DARK_MODE_ENABLE = "pref_dark_mode_enable";
 
     // A reference to the service used to get location updates.
     private KLService mService = null;
@@ -50,6 +63,7 @@ public class MainActivity extends AppCompatActivity {
     private DrawerLayout mDrawerLayout;
     private FloatingActionButton mFloatingActionButton;
     private Toolbar mToolbar;
+    private Menu mAppbarMenu;
 
     // Monitors the state of the connection to the service.
     private final ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -70,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
             // radioUrl = "http://s3.voscast.com:7820/;stream1370537750222/1;nop.mp3"; // VOAR Christian Family Radio
             // KLPlaybackManager.getPlaybackManager().playAudio(radioUrl);
 
-            mService.handlePlayRequest();
+            // mService.handlePlayRequest();
         }
 
         /**
@@ -89,6 +103,8 @@ public class MainActivity extends AppCompatActivity {
 
     };
 
+    private PlaybackResultReceiver mPlaybackResultReceiver;
+
     private FragmentManager mFragmentManager = getSupportFragmentManager();
 
     private final BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
@@ -97,9 +113,11 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
 
+            mAppbarMenu.findItem(R.id.action_add).setVisible(false);// hide "add" button on Appbar
+
             switch (item.getItemId()) {
                 case R.id.nav_radio_stations:
-                    //mTextMessage.setText(R.string.title_radio_station);
+                    mAppbarMenu.findItem(R.id.action_add).setVisible(true);
 
                     mFragmentManager.beginTransaction()
                             .replace(R.id.holder, new RadioStationFragment())
@@ -109,7 +127,6 @@ public class MainActivity extends AppCompatActivity {
                     return true;
 
                 case R.id.nav_radio_fav:
-                    //mTextMessage.setText(R.string.title_radio_favorites);
 
                     mFragmentManager.beginTransaction()
                             .replace(R.id.holder, new RadioFavoritesFragment())
@@ -119,7 +136,6 @@ public class MainActivity extends AppCompatActivity {
                     return true;
 
                 case R.id.nav_radio_podcast:
-                    //mTextMessage.setText(R.string.title_radio_podcasts);
 
                     mFragmentManager.beginTransaction()
                             .replace(R.id.holder, new RadioPodcastsFragment())
@@ -129,7 +145,6 @@ public class MainActivity extends AppCompatActivity {
                     return true;
 
                 case R.id.nav_radio_settings:
-                    //mTextMessage.setText(R.string.title_radio_settings);
 
                     mFragmentManager.beginTransaction()
                             .replace(R.id.holder, new RadioSettingsFragment())
@@ -203,9 +218,20 @@ public class MainActivity extends AppCompatActivity {
 //        }
     }
 
+    private void loadAppTheme() {
+        SharedPreferences pref = PreferenceManager
+                .getDefaultSharedPreferences(this);
+        // DarkMode was set to default in application
+        boolean isDarkMode = pref.getBoolean(PREF_DARK_MODE_ENABLE, true);
+        if (!isDarkMode) {
+            setTheme(R.style.LightTheme);
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         //setTheme(R.style.LightTheme);
+        loadAppTheme();
 
         /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             Window window = getWindow(); // in Activity's onCreate() for instance
@@ -224,23 +250,18 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
 
+        //HandlerThread thread = new HandlerThread("MainActivityThreadHandler",
+        //        android.os.Process.THREAD_PRIORITY_BACKGROUND);
+        //thread.start();
+        // Get the HandlerThread's Looper and use it for our Handler
+        //Looper looper = thread.getLooper();
+        mPlaybackResultReceiver = new PlaybackResultReceiver(new Handler(), this);
+
         mDrawerLayout = findViewById(R.id.drawer_layout);
         mFloatingActionButton = findViewById(R.id.floatingActionButton);
+        mFloatingActionButton.hide();
 
-        mToolbar = findViewById(R.id.toolbar);
-        /*mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mDrawerLayout.openDrawer(GravityCompat.START);
-            }
-        });*/
-        setSupportActionBar(mToolbar);
-        ActionBar actionbar = getSupportActionBar();
-        if (actionbar != null) {// should not null here!
-            //actionbar.setElevation(0f);
-            actionbar.setDisplayHomeAsUpEnabled(true);
-            actionbar.setHomeAsUpIndicator(R.drawable.ic_hamburger_black_24dp);
-        }
+        setupAppbar();
 
         // setup bottom bottom_navigation bar
         BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
@@ -290,6 +311,42 @@ public class MainActivity extends AppCompatActivity {
         showDataFromDb();
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.appbar, menu);
+
+        mAppbarMenu = menu;
+
+        // correct text of Dark Mode
+        SharedPreferences pref = PreferenceManager
+                .getDefaultSharedPreferences(this);
+        // DarkMode was set to default in application
+        boolean isDarkMode = pref.getBoolean(PREF_DARK_MODE_ENABLE, true);
+        menu.findItem(R.id.action_dark_mode).setTitle(isDarkMode ?
+                R.string.appbar_disable_darkmode : R.string.appbar_enable_darkmode);
+
+        return true;
+    }
+
+    private void setupAppbar() {
+        mToolbar = findViewById(R.id.toolbar);
+        /*mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mDrawerLayout.openDrawer(GravityCompat.START);
+            }
+        });*/
+        mToolbar.setOverflowIcon(getDrawable(R.drawable.ic_appbar_more_24dp));
+        setSupportActionBar(mToolbar);
+        ActionBar actionbar = getSupportActionBar();
+        if (actionbar != null) {// should not null here!
+            //actionbar.setElevation(0f);
+            actionbar.setDisplayHomeAsUpEnabled(true);
+            actionbar.setHomeAsUpIndicator(R.drawable.ic_hamburger_black_24dp);
+        }
+    }
+
     private void insertDataToDb() {
         //Note : Wherever we use Sqlite classes, its all from net.sqlite.database.
         SQLiteDatabase db = DbHelper.getInstance(this).getWritableDatabase();
@@ -327,6 +384,9 @@ public class MainActivity extends AppCompatActivity {
         super.onStart();
 
         Intent backgroundIntent = new Intent(this, KLService.class);
+
+        backgroundIntent.putExtra("receiver", mPlaybackResultReceiver);
+
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             // NV: we need to start our service in other to trigger onStartCommand() on android 6.
             // This way ensure the flag START_STICKY will be used and our service not being killed by doze mode!
@@ -335,7 +395,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Bind to the service. If the service is in foreground mode, this signals to the service
         // that since this activity is in the foreground, the service can exit foreground mode.
-        bindService(new Intent(this, KLService.class),
+        bindService(backgroundIntent,
                 mServiceConnection,
                 Context.BIND_AUTO_CREATE);
     }
@@ -349,6 +409,10 @@ public class MainActivity extends AppCompatActivity {
             Logger.getLogger().e("[INF] unbinding service...");
             unbindService(mServiceConnection);
             mBound = false;
+        }
+
+        if (mPlaybackResultReceiver != null) {
+            mPlaybackResultReceiver.releaseReceiver();
         }
 
         super.onStop();
@@ -372,6 +436,8 @@ public class MainActivity extends AppCompatActivity {
         mFragmentManager.beginTransaction()
                 .replace(R.id.holder, new RadioStationFragment())
                 .commit();
+
+        parsingTesting();
     }
 
     @Override
@@ -395,22 +461,131 @@ public class MainActivity extends AppCompatActivity {
             case android.R.id.home:
                 mDrawerLayout.openDrawer(GravityCompat.START);
                 return true;
+
+            case R.id.action_add:
+                Toast.makeText(this, "Add new station", Toast.LENGTH_SHORT).show();
+                return true;
+
+            case R.id.action_dark_mode:
+                updateThemeModePref();
+                return true;
+
+            case R.id.action_settings:
+                return true;
+
+            default:
+                return super.onOptionsItemSelected(item);
         }
-        return super.onOptionsItemSelected(item);
     }
 
-    private void testing() {
-        Thread t = new Thread();
+    private void updateThemeModePref() {
+        SharedPreferences pref = PreferenceManager
+                .getDefaultSharedPreferences(this);
+        // DarkMode was set to default in application
+
+        boolean isInDarkMode = pref.getBoolean(PREF_DARK_MODE_ENABLE, true);
+        if (isInDarkMode) {
+            mAppbarMenu.findItem(R.id.action_dark_mode).setTitle(R.string.appbar_enable_darkmode);
+            pref.edit().putBoolean(PREF_DARK_MODE_ENABLE, false).apply();
+        } else {
+            mAppbarMenu.findItem(R.id.action_dark_mode).setTitle(R.string.appbar_disable_darkmode);
+            pref.edit().putBoolean(PREF_DARK_MODE_ENABLE, true).apply();
+        }
+
+        //invalidateOptionsMenu();
+
+        // reset application
+        finish();
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+    }
+
+    private void parsingTesting() {
         try {
-            t.join(3000);
-        } catch (InterruptedException e) {
+            URL url = new URL(
+                    "http://199.115.115.71:8319/;");
+            ParsingHeaderData streaming = new ParsingHeaderData();
+            ParsingHeaderData.TrackData trackData = streaming.getTrackDetails(url);
+            Logger.getLogger().e("[INF] Song Artist Name "+ trackData.artist);
+            Logger.getLogger().e("[INF] Song Artist Title"+ trackData.title);
+        } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+    private void testing() {
+//        Thread t = new Thread();
+//        try {
+//            t.join(3000);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
 
         //boolean b = LocalBroadcastManager.getInstance(this).sendBroadcast(null);
         //LocalBroadcastManager.getInstance(this).registerReceiver(null, null);
 
         // sendStickyBroadcast(null);
 
+        invalidateOptionsMenu();
+
+
+        String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0";
+
+        String[] projection = {
+                MediaStore.Audio.Media._ID,
+                MediaStore.Audio.Media.ARTIST,
+                MediaStore.Audio.Media.TITLE,
+                MediaStore.Audio.Media.DATA,
+                MediaStore.Audio.Media.DISPLAY_NAME,
+                MediaStore.Audio.Media.DURATION
+        };
+        Uri songUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+
+        android.database.Cursor cursor = getContentResolver().query(
+                songUri,
+                projection,
+                selection,
+                null,
+                null);
+
+        if (cursor != null) {
+            List<String> songs = new ArrayList<String>();
+
+            int songId = cursor.getColumnIndex(MediaStore.Audio.Media._ID);
+            int songTitle = cursor.getColumnIndex(MediaStore.Audio.Media.TITLE);
+
+            while (cursor.moveToNext()) {
+                // new File(cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA)));
+
+                long currentId = cursor.getLong(songId);
+                String currentTitle = cursor.getString(songTitle);
+
+                songs.add(cursor.getString(0) + "||" + cursor.getString(1) + "||" + cursor.getString(2) + "||" + cursor.getString(3) + "||" + cursor.getString(4) + "||" + cursor.getString(5));
+            }
+
+            cursor.close();
+        }
+    }
+
+    @Override
+    public void onReceiveResult(int resultCode, Bundle resultData) {
+        //TODO Handle the results from the intent service here!
+//        switch (message.what) {
+//            case KLService.MSG_PLAYBACK_STATE_UPDATE:
+//                PlaybackStateCompat playbackStateCompat = (PlaybackStateCompat) message.obj;
+//                int errCode = playbackStateCompat.getErrorCode();
+//                Toast.makeText(this, playbackStateCompat.getErrorMessage(), Toast.LENGTH_LONG).show();
+//                break;
+//        }
+    }
+
+    private void hideSystemUi(View view) {
+        view.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE
+                | View.SYSTEM_UI_FLAG_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
     }
 }

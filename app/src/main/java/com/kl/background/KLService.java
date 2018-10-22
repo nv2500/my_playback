@@ -11,23 +11,26 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Binder;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
+import android.os.ResultReceiver;
+import android.support.v4.media.session.PlaybackStateCompat;
 import android.widget.Toast;
 
 import com.example.myapplication.MainActivity;
 import com.example.myapplication.R;
 import com.kl.KLApplication;
 import com.kl.KLPlaybackManager;
-import com.kl.playback.Playback;
+import com.kl.background.provider.QueueManager;
 import com.kl.utils.Logger;
 
 import androidx.core.app.NotificationCompat;
 
-public class KLService extends Service {
+public class KLService extends Service implements KLPlaybackManager.PlaybackServiceCallback {
 
 //    /**
 //     * A constructor is required, and must call the super IntentService(String)
@@ -69,8 +72,9 @@ public class KLService extends Service {
      */
     private static final String CHANNEL_ID = "channel_01";
 
-    private Looper mServiceLooper;
-    private ServiceHandler mServiceHandler;
+    private InternalServiceHandler mInternalServiceHandler;
+
+    private ResultReceiver mUiBindingResultReceiver;
 
     /**
      * The identifier for the notification displayed for the foreground service.
@@ -84,8 +88,8 @@ public class KLService extends Service {
     private NotificationManager mNotificationManager;
 
     // Handler that receives messages from the thread
-    private final class ServiceHandler extends Handler {
-        ServiceHandler(Looper looper) {
+    private final class InternalServiceHandler extends Handler {
+        InternalServiceHandler(Looper looper) {
             super(looper);
         }
         @Override
@@ -111,6 +115,32 @@ public class KLService extends Service {
         }
     }
 
+    @Override
+    public void onCreate() {
+        // The service is being created
+        // super.onCreate();
+        Logger.getLogger().d("[INF] in onCreate <<<");
+
+        initializeNotification();
+
+        initializeBackgroundStuffs();
+
+        QueueManager queueManager = new QueueManager(getResources(),
+                new QueueManager.MetadataUpdateListener() {
+                    @Override
+                    public void onCurrentQueueIndexUpdated(int queueIndex) {
+                        // our player will update "next" media in this callback
+                        mPlaybackManager.handlePlayRequest();
+                    }
+                });
+
+        mPlaybackManager = new KLPlaybackManager(
+                KLApplication.getInstance().getAppContext(),
+                queueManager,
+                this);
+
+        // doHeartBeat();
+    }
     private void initializeNotification() {
         mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
@@ -125,37 +155,27 @@ public class KLService extends Service {
             mNotificationManager.createNotificationChannel(mChannel);
         }
     }
-
-    @Override
-    public void onCreate() {
-        // The service is being created
-        // super.onCreate();
-
-        initializeNotification();
-
-        Logger.getLogger().d("[INF] onCreate <<<");
-
+    private void initializeBackgroundStuffs() {
         // Start up the thread running the service. Note that we create a
         // separate thread because the service normally runs in the process's
         // main thread, which we don't want to block. We also make it
         // background priority so CPU-intensive work doesn't disrupt our UI.
-        HandlerThread thread = new HandlerThread("ServiceStartArguments",
+        HandlerThread handlerThread = new HandlerThread("ServiceStartArguments",
                 android.os.Process.THREAD_PRIORITY_BACKGROUND);
-        thread.start();
+        handlerThread.start();
 
         // Get the HandlerThread's Looper and use it for our Handler
-        mServiceLooper = thread.getLooper();
-        mServiceHandler = new ServiceHandler(mServiceLooper);
-
-        mPlaybackManager = new KLPlaybackManager(KLApplication.getInstance().getContext());
-
-        // doHeartBeat();
+        Looper serviceLooper = handlerThread.getLooper();
+        mInternalServiceHandler = new InternalServiceHandler(serviceLooper);
     }
 
     @Override
     public IBinder onBind(Intent intent) {
         // A client is binding to the service with bindService()
         Logger.getLogger().e("[INF] onBind <<<");
+
+        // Retrieve the Messenger's Handler from the activity that bind to this service via intent.
+        mUiBindingResultReceiver = intent.getParcelableExtra("receiver");
 
         // Called when a client (MainActivity in case of this sample) comes to the foreground
         // and binds with this service. The service should cease to be a foreground service
@@ -225,9 +245,9 @@ public class KLService extends Service {
 
 //        // For each start request, send a message to start a job and deliver the
 //        // start ID so we know which request we're stopping when we finish the job
-//        Message msg = mServiceHandler.obtainMessage();
+//        Message msg = mInternalServiceHandler.obtainMessage();
 //        msg.arg1 = startId;
-//        mServiceHandler.sendMessage(msg);
+//        mInternalServiceHandler.sendMessage(msg);
 
         // Tells the system to not try to recreate the service after it has been killed.
         // return START_NOT_STICKY;
@@ -237,9 +257,9 @@ public class KLService extends Service {
     }
 
     private void doHeartBeat() {
-        Message msg = mServiceHandler.obtainMessage();
+        Message msg = mInternalServiceHandler.obtainMessage();
         msg.arg1 = MSG_HEARTBEAT;
-        mServiceHandler.sendMessageDelayed(msg, 5000);
+        mInternalServiceHandler.sendMessageDelayed(msg, 5000);
     }
 
     @Override
@@ -313,7 +333,7 @@ public class KLService extends Service {
 
         Toast.makeText(this, "Closing application...", Toast.LENGTH_SHORT).show();
 
-        mServiceHandler.removeCallbacksAndMessages(null);
+        mInternalServiceHandler.removeCallbacksAndMessages(null);
 
         stopForeground(true);
 
@@ -352,22 +372,22 @@ public class KLService extends Service {
         return false;
     }
 
-    public void handlePlayRequest() {
-        if (mPlaybackManager == null) {
-            // should not enter this case
-            return;
-        }
-
-        Playback playback = mPlaybackManager.getPlayback();
-        if (!playback.isPlaying()) {
-            // only play new one
-            String radioUrl = "http://199.115.115.71:8319/;"; // CVCR - Valley Christian Radio
-             radioUrl = "http://s3.voscasst.com:7820/;stream1370537750222/1;nop.mp3"; // VOAR Christian Family Radio
-            mPlaybackManager.playAudio(radioUrl);
-        } else {
-            Logger.getLogger().e("[INF] continue play current media!");
-        }
-    }
+//    public void handlePlayRequest() {
+//        if (mPlaybackManager == null) {
+//            // should not enter this case
+//            return;
+//        }
+//
+//        Playback playback = mPlaybackManager.getPlayback();
+//        if (!playback.isPlaying()) {
+//            // only play new one
+//            String radioUrl = "http://199.115.115.71:8319/;"; // CVCR - Valley Christian Radio
+//            // radioUrl = "http://s3.voscasst.com:7820/;stream1370537750222/1;nop.mp3"; // VOAR Christian Family Radio
+//            mPlaybackManager.handlePlayRequest();
+//        } else {
+//            Logger.getLogger().e("[INF] continue play current media!");
+//        }
+//    }
 
     /**
      * If the player is already in the ready state
@@ -379,7 +399,40 @@ public class KLService extends Service {
             // should not enter this case
             return;
         }
+    }
 
+    // implementation for KLPlaybackManager.PlaybackServiceCallback - S
+    @Override
+    public void onPlaybackStart() {
 
     }
+
+    @Override
+    public void onNotificationRequired() {
+
+    }
+
+    @Override
+    public void onPlaybackStop() {
+
+    }
+
+    @Override
+    public void onPlaybackStateUpdated(PlaybackStateCompat newState) {
+        /*
+         * Now background service is processed,
+         * we can pass the status of the service back to the activity using the handler
+         */
+        Message msg = Message.obtain();//mInternalServiceHandler.obtainMessage();// new Message();
+        msg.obj = newState;// "Sending message to UI after completion of background task!";
+        msg.what = MSG_PLAYBACK_STATE_UPDATE;
+
+        Bundle bundle = new Bundle();
+        bundle.putParcelable("PlaybackState", newState);
+
+        mUiBindingResultReceiver.send(1, bundle);
+    }
+    // implementation for KLPlaybackManager.PlaybackServiceCallback - E
+
+    public static final int MSG_PLAYBACK_STATE_UPDATE = 1;
 }

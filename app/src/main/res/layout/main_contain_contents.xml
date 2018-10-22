@@ -15,23 +15,9 @@
         android:layout_height="match_parent"
         android:background="@android:color/transparent">
 
-        <com.google.android.material.appbar.AppBarLayout
-            android:id="@+id/appbar"
-            android:stateListAnimator="@animator/appbar_elevation"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="@android:color/transparent">
-
-            <com.kl.ui.widget.CenteredToolbar
-                android:id="@+id/toolbar"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/mybg_appr_drawer"
-                android:minHeight="?attr/actionBarSize"
-                app:title="@string/app_name" />
-
-        </com.google.android.material.appbar.AppBarLayout>
-
+        <include
+            android:id="@+id/toolbar_container"
+            layout="@layout/include_appbar" />
 
         <!--androidx.swiperefreshlayout.widget.SwipeRefreshLayout-->
         <androidx.core.widget.NestedScrollView
@@ -56,7 +42,7 @@
             android:layout_margin="16dp"
             android:clickable="true"
             android:src="@drawable/exo_controls_fullscreen_exit"
-            android:visibility="visible"
+            android:visibility="gone"
             app:layout_anchor="@id/nestedScrollView"
             app:layout_anchorGravity="bottom|right|end" />
 
@@ -69,12 +55,12 @@
             android:layout_gravity="bottom"
             android:background="@drawable/mybg_bottom_nav_drawer"
 
+            android:stateListAnimator="@animator/bottom_nav_elevation"
+            app:elevation="8dp"
             app:itemIconTint="@color/bnv_tab_item_foreground"
             app:itemTextColor="@color/bnv_tab_item_foreground"
-            android:stateListAnimator="@animator/bottom_nav_elevation"
             app:labelVisibilityMode="selected"
             app:layout_insetEdge="bottom"
-
             app:menu="@menu/bottom_navigation" />
         <!--app:layout_behavior="com.kl.ui.widget.BottomNavigationBehavior"-->
         <!--app:layout_insetEdge="bottom" avoid overlap layout between BottomNavigationView and FloatingActionButton -->

@@ -26,7 +26,7 @@ public class KLApplication extends Application {
         SQLiteDatabase.loadLibs(this);
     }
 
-    public Context getContext() {
+    public Context getAppContext() {
         return getApplicationContext();
     }
 
