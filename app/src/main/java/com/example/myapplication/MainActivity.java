@@ -83,8 +83,6 @@ public class MainActivity extends AppCompatActivity implements PlaybackResultRec
             radioUrl = "http://199.115.115.71:8319/;"; // CVCR - Valley Christian Radio
             // radioUrl = "http://s3.voscast.com:7820/;stream1370537750222/1;nop.mp3"; // VOAR Christian Family Radio
             // KLPlaybackManager.getPlaybackManager().playAudio(radioUrl);
-
-            // mService.handlePlayRequest();
         }
 
         /**
@@ -387,11 +385,11 @@ public class MainActivity extends AppCompatActivity implements PlaybackResultRec
 
         backgroundIntent.putExtra("receiver", mPlaybackResultReceiver);
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+        //if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.O) {
             // NV: we need to start our service in other to trigger onStartCommand() on android 6.
             // This way ensure the flag START_STICKY will be used and our service not being killed by doze mode!
             startService(backgroundIntent);
-        }
+        //}
 
         // Bind to the service. If the service is in foreground mode, this signals to the service
         // that since this activity is in the foreground, the service can exit foreground mode.
@@ -464,6 +462,7 @@ public class MainActivity extends AppCompatActivity implements PlaybackResultRec
 
             case R.id.action_add:
                 Toast.makeText(this, "Add new station", Toast.LENGTH_SHORT).show();
+                mService.getPlaybackManager().handlePlayRequest();
                 return true;
 
             case R.id.action_dark_mode:

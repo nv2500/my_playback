@@ -39,7 +39,7 @@
         <item name="baseColorPrimary">#212121</item>
         <item name="baseColorPrimaryDark">#212121</item>
         <item name="baseColorDarkerGray">#8C8C8C</item>
-        <item name="baseColorNavigationDivider">#1aaaaaaa</item>
+        <item name="baseColorNavigationDivider">#1aaaaaaa</item> <!-- 10% of transparent -->
 
         <item name="baseColorAppbarText">#FFFF</item>
     </style>

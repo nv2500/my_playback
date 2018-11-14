@@ -29,16 +29,19 @@ public class QueueManager {
     }
 
     public interface MetadataUpdateListener {
-        //void onMetadataChanged(MediaMetadataCompat metadata);
-        //void onMetadataRetrieveError();
+        void onMetadataChanged(MediaMetadataCompat metadata);
+        void onMetadataRetrieveError();
         void onCurrentQueueIndexUpdated(int queueIndex);
-        //void onQueueUpdated(String title, List<MediaSessionCompat.QueueItem> newQueue);
+        void onQueueUpdated(String title, List<MediaSessionCompat.QueueItem> newQueue);
     }
 
     public MediaSessionCompat.QueueItem getCurrentMusic() {
         //if (!QueueHelper.isIndexPlayable(mCurrentIndex, mPlayingQueue)) {
         //    return null;
         //}
+        if (mPlayingQueue == null || mPlayingQueue.size() == 0) {
+            return null;
+        }
         return mPlayingQueue.get(mCurrentIndex);
     }
 }

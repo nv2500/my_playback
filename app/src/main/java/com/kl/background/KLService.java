@@ -18,6 +18,8 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
 import android.os.ResultReceiver;
+import android.support.v4.media.MediaMetadataCompat;
+import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.widget.Toast;
 
@@ -27,6 +29,8 @@ import com.kl.KLApplication;
 import com.kl.KLPlaybackManager;
 import com.kl.background.provider.QueueManager;
 import com.kl.utils.Logger;
+
+import java.util.List;
 
 import androidx.core.app.NotificationCompat;
 
@@ -84,8 +88,14 @@ public class KLService extends Service implements KLPlaybackManager.PlaybackServ
     private static final int MSG_HEARTBEAT = 119;
 
     private KLPlaybackManager mPlaybackManager;
+    public KLPlaybackManager getPlaybackManager() {
+        return mPlaybackManager;
+    }
 
     private NotificationManager mNotificationManager;
+
+
+    private MediaSessionCompat mSession;
 
     // Handler that receives messages from the thread
     private final class InternalServiceHandler extends Handler {
@@ -125,26 +135,13 @@ public class KLService extends Service implements KLPlaybackManager.PlaybackServ
 
         initializeBackgroundStuffs();
 
-        QueueManager queueManager = new QueueManager(getResources(),
-                new QueueManager.MetadataUpdateListener() {
-                    @Override
-                    public void onCurrentQueueIndexUpdated(int queueIndex) {
-                        // our player will update "next" media in this callback
-                        mPlaybackManager.handlePlayRequest();
-                    }
-                });
-
-        mPlaybackManager = new KLPlaybackManager(
-                KLApplication.getInstance().getAppContext(),
-                queueManager,
-                this);
-
+        initializeMediaPlayback();
         // doHeartBeat();
     }
     private void initializeNotification() {
         mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
-        // Android O requires a Notification Channel.
+        // Android O requires a Notification Chaonnel.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             CharSequence name = getString(R.string.app_name);
             // Create the channel for the notification
@@ -154,6 +151,45 @@ public class KLService extends Service implements KLPlaybackManager.PlaybackServ
             // Set the Notification Channel for the Notification Manager.
             mNotificationManager.createNotificationChannel(mChannel);
         }
+    }
+    private void initializeMediaPlayback() {
+        QueueManager queueManager = new QueueManager(getResources(),
+                new QueueManager.MetadataUpdateListener() {
+                    @Override
+                    public void onMetadataChanged(MediaMetadataCompat metadata) {
+                        mSession.setMetadata(metadata);
+                    }
+
+                    @Override
+                    public void onMetadataRetrieveError() {
+                        mPlaybackManager.updatePlaybackState(
+                                getString(R.string.error_no_metadata));
+                    }
+
+                    @Override
+                    public void onCurrentQueueIndexUpdated(int queueIndex) {
+                        // our player will update "next" media in this callback
+                        mPlaybackManager.handlePlayRequest();
+                    }
+
+                    @Override
+                    public void onQueueUpdated(String title,
+                                               List<MediaSessionCompat.QueueItem> newQueue) {
+                        mSession.setQueue(newQueue);
+                        mSession.setQueueTitle(title);
+                    }
+                });
+        // Start a new MediaSession
+        mSession = new MediaSessionCompat(this, "PlayerService");
+        mSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS |
+                MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);
+
+        mPlaybackManager = new KLPlaybackManager(
+                KLApplication.getInstance().getAppContext(),
+                queueManager,
+                this);
+
+        mSession.setCallback(mPlaybackManager.getMediaSessionCallback());
     }
     private void initializeBackgroundStuffs() {
         // Start up the thread running the service. Note that we create a
@@ -192,10 +228,12 @@ public class KLService extends Service implements KLPlaybackManager.PlaybackServ
         // All clients have unbound with unbindService()
         //return mAllowRebind;
 
+        boolean isPlaying = mPlaybackManager.getPlayback().isPlaying();
+
         // Called when the last client (MainActivity in case of this sample) unbinds from this
         // service. If this method is called due to a configuration change in MainActivity, we
         // do nothing. Otherwise, we make this service a foreground service.
-        if (!mChangingConfiguration) {// && Utils.requestingLocationUpdates(this)) {
+        if (!mChangingConfiguration && isPlaying) {// && Utils.requestingLocationUpdates(this)) {
             /*
             // TODO(developer). If targeting O, use the following code.
             if (Build.VERSION.SDK_INT == Build.VERSION_CODES.O) {
@@ -205,7 +243,7 @@ public class KLService extends Service implements KLPlaybackManager.PlaybackServ
                 startForeground(NOTIFICATION_ID, getNotification());
             }
              */
-            Logger.getLogger().d("[INF] start foreground service again");
+            Logger.getLogger().i("[INF] start foreground service again");
             startForeground(NOTIFICATION_ID, getNotification());
         }
 
@@ -234,13 +272,15 @@ public class KLService extends Service implements KLPlaybackManager.PlaybackServ
 
         //Toast.makeText(this, "Service starting...", Toast.LENGTH_SHORT).show();
 
-        boolean startedFromNotification = intent.getBooleanExtra("EXTRA_STARTED_FROM_NOTIFICATION",
-                false);
+        if (intent != null) {
+            boolean startedFromNotification = intent.getBooleanExtra("EXTRA_STARTED_FROM_NOTIFICATION",
+                    false);
 
-        // We got here because the user decided to remove location updates from the notification.
-        if (startedFromNotification) {
-            Logger.getLogger().e("stop service from notification");
-            stopSelf();
+            // We got here because the user decided to remove location updates from the notification.
+            if (startedFromNotification) {
+                Logger.getLogger().e("stop service from notification");
+                stopSelf();
+            }
         }
 
 //        // For each start request, send a message to start a job and deliver the
@@ -334,6 +374,7 @@ public class KLService extends Service implements KLPlaybackManager.PlaybackServ
         Toast.makeText(this, "Closing application...", Toast.LENGTH_SHORT).show();
 
         mInternalServiceHandler.removeCallbacksAndMessages(null);
+        mSession.release();
 
         stopForeground(true);
 
@@ -372,39 +413,31 @@ public class KLService extends Service implements KLPlaybackManager.PlaybackServ
         return false;
     }
 
-//    public void handlePlayRequest() {
+//    /**
+//     * If the player is already in the ready state
+//     * then this method can be used to pause and resume playback.
+//     * @param playWhenReady
+//     */
+//    public void setPlayWhenReady(boolean playWhenReady) {
 //        if (mPlaybackManager == null) {
 //            // should not enter this case
 //            return;
 //        }
-//
-//        Playback playback = mPlaybackManager.getPlayback();
-//        if (!playback.isPlaying()) {
-//            // only play new one
-//            String radioUrl = "http://199.115.115.71:8319/;"; // CVCR - Valley Christian Radio
-//            // radioUrl = "http://s3.voscasst.com:7820/;stream1370537750222/1;nop.mp3"; // VOAR Christian Family Radio
-//            mPlaybackManager.handlePlayRequest();
-//        } else {
-//            Logger.getLogger().e("[INF] continue play current media!");
-//        }
 //    }
-
-    /**
-     * If the player is already in the ready state
-     * then this method can be used to pause and resume playback.
-     * @param playWhenReady
-     */
-    public void setPlayWhenReady(boolean playWhenReady) {
-        if (mPlaybackManager == null) {
-            // should not enter this case
-            return;
-        }
-    }
 
     // implementation for KLPlaybackManager.PlaybackServiceCallback - S
     @Override
     public void onPlaybackStart() {
+        mSession.setActive(true);
 
+        // The service needs to continue running even after the bound client (usually a
+        // MediaController) disconnects, otherwise the music playback will stop.
+        // Calling startService(Intent) will keep the service running until it is explicitly killed.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(new Intent(getApplicationContext(), KLService.class));
+        } else {
+            startService(new Intent(getApplicationContext(), KLService.class));
+        }
     }
 
     @Override
@@ -414,11 +447,15 @@ public class KLService extends Service implements KLPlaybackManager.PlaybackServ
 
     @Override
     public void onPlaybackStop() {
+        mSession.setActive(false);
 
+        stopForeground(true);
     }
 
     @Override
     public void onPlaybackStateUpdated(PlaybackStateCompat newState) {
+        mSession.setPlaybackState(newState);
+
         /*
          * Now background service is processed,
          * we can pass the status of the service back to the activity using the handler

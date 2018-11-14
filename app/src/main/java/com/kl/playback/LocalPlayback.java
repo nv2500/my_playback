@@ -4,7 +4,6 @@ import android.content.Context;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
-import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.text.TextUtils;
@@ -20,6 +19,7 @@ import com.google.android.exoplayer2.RenderersFactory;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.Timeline;
 import com.google.android.exoplayer2.audio.AudioAttributes;
+import com.google.android.exoplayer2.ext.flac.FlacExtractor;
 import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
 import com.google.android.exoplayer2.extractor.ExtractorsFactory;
 import com.google.android.exoplayer2.source.ExtractorMediaSource;
@@ -41,6 +41,12 @@ import static com.google.android.exoplayer2.C.USAGE_MEDIA;
 
 public class LocalPlayback implements Playback {
 
+    /*
+    sample of mp3 file on local storage
+    80210||Hoàng Thùy Linh, Kimmese||Fall In Love||/storage/emulated/0/NCT/FallInLove-HoangThuyLinhKimmese-5707418.mp3||FallInLove-HoangThuyLinhKimmese-5707418.mp3||226325
+    data= /storage/emulated/0/NCT/FallInLove-HoangThuyLinhKimmese-5707418.mp3
+     */
+
     private Playback.Callback mCallback;
 
     private WifiManager.WifiLock mWifiLock;
@@ -48,6 +54,17 @@ public class LocalPlayback implements Playback {
 
     // ExoPlayer player
     private SimpleExoPlayer mExoPlayer;
+
+    /**
+     * Testing code for now
+     * @return
+     */
+    public SimpleExoPlayer getExoPlayer() {
+        if (mExoPlayer == null) {
+            initializeExoPlayer();
+        }
+        return mExoPlayer;
+    }
 
     private Context mContext;
     private AudioManager mAudioManager;
@@ -282,19 +299,17 @@ public class LocalPlayback implements Playback {
         //tryToGetAudioFocus();
         //registerAudioNoisyReceiver();
 
-//        String mediaId = item.getDescription().getMediaId();
-//        boolean mediaHasChanged = !TextUtils.equals(mediaId, mCurrentMediaId);
-//        if (mediaHasChanged) {
-//            mCurrentMediaId = mediaId;
-//        }
-        boolean mediaHasChanged = true;
+        final String mediaId = item.getDescription().getMediaId();
+        boolean mediaHasChanged = !TextUtils.equals(mediaId, mCurrentMediaId);
+        if (mediaHasChanged) {
+            mCurrentMediaId = mediaId;
+        }
 
         if (mediaHasChanged || mExoPlayer == null) {
             releaseResources(false); // release everything except the player
             //MediaMetadataCompat track =
             //        mMusicProvider.getMusic(
-            //                MediaIDHelper.extractMusicIDFromMediaID(
-            //                        item.getDescription().getMediaId()));
+            //                MediaIDHelper.extractMusicIDFromMediaID(mediaId));
 
             //String source = track.getString(MusicProviderSource.CUSTOM_METADATA_TRACK_SOURCE);
             String source = "http://199.115.115.71:8319/;";//FIXME need to sync this code
@@ -303,16 +318,7 @@ public class LocalPlayback implements Playback {
             }
 
             if (mExoPlayer == null) {
-                // initialize for ExoPlayer
-                // RenderersFactory - creates renderers for timestamp synchronized rendering of video, audio and text (subtitles).
-                // The TrackSelector - responsible for selecting from the available audio, video and text tracks.
-                // LoadControl - manages buffering of the player.
-                TrackSelector trackSelector = new DefaultTrackSelector();
-                LoadControl loadControl = new DefaultLoadControl();
-                RenderersFactory renderersFactory = new DefaultRenderersFactory(mContext);
-
-                mExoPlayer = ExoPlayerFactory.newSimpleInstance(renderersFactory, trackSelector, loadControl);
-                mExoPlayer.addListener(mEventListener);
+                initializeExoPlayer();
             }
 
             // Android "O" makes much greater use of AudioAttributes, especially
@@ -468,5 +474,25 @@ public class LocalPlayback implements Playback {
 
             mPlayOnFocusGain = false;
         }
+    }
+
+    private void initializeExoPlayer() {
+        // initialize for ExoPlayer
+        // The TrackSelector - responsible for selecting from the available audio, video and text tracks.
+        TrackSelector trackSelector = new DefaultTrackSelector();
+
+        // LoadControl - manages buffering of the player.
+        LoadControl loadControl = new DefaultLoadControl();
+
+        // FlacExtractor flacExtractor = new FlacExtractor();
+        // ExtractorsFactory extractorsFactoryAudio = new DefaultExtractorsFactory();
+        // flacExtractor.init();
+
+        // RenderersFactory - creates renderers for timestamp synchronized rendering of video, audio and text (subtitles).
+        RenderersFactory renderersFactory = new DefaultRenderersFactory(mContext,
+                DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON);
+
+        mExoPlayer = ExoPlayerFactory.newSimpleInstance(mContext, renderersFactory, trackSelector, loadControl);
+        mExoPlayer.addListener(mEventListener);
     }
 }

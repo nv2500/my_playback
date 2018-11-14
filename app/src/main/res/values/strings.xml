@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">My Application</string>
+    <string name="app_name">Yours Player</string>
 
     <string name="drawer_title_radio">Radio Online</string>
     <string name="drawer_title_music_lib">Music Library</string>
@@ -18,6 +18,8 @@
 
     <string name="appbar_enable_darkmode">Enable dark mode</string>
     <string name="appbar_disable_darkmode">Disable dark mode</string>
+
+    <string name="error_no_metadata">Unable to retrieve metadata.</string>
 
     <string name="lorem">Lorem ipsum dolor sit amet, sit penatibus enim, eget libero pellentesque tincidunt in tempus varius. Vulputate tempus suscipit maecenas ullamcorper consectetuer duis, quis enim vitae eros, integer pharetra parturient elit aliquet ut nullam. Ac integer lorem velit nam, eleifend maecenas at, egestas varius id id sem neque ut, id quam, tempus nunc et nec. Amet feugiat vehicula morbi, nec sapien euismod velit tincidunt, ante morbi, volutpat eu sed quam dictum, id fusce class eu. Tortor sed nonummy pretium odio, nunc vitae per, bibendum elit, amet nunc nunc varius risus ultricies. Ut convallis tellus vitae nec et vitae. Repellat lectus. Eu rutrum a wisi, ipsum lorem ac donec adipiscing eget, penatibus ac arcu. Fusce in et sapien amet vel, mauris tellus elit sed, ridiculus nulla vitae sollicitudin sapien porttitor.
 \n\n
